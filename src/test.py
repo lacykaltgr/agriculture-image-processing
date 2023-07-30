@@ -1,4 +1,3 @@
-
 from utils import *
 
 color_dict = {0: (0, 0, 0),

@@ -62,52 +62,6 @@ class UNet(nn.Module):
         # Output layer of the U-Net with a softmax activation
         self.conv20 = nn.Conv2d(16, out_channels, kernel_size=1)
 
-    def train_model(self, train_loader, valid_loader, num_epochs=100, learning_rate=1e-4, device='mps'):
-        self.to(device)
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(self.parameters(), lr=learning_rate)
-        train_loss = []
-        valid_loss = []
-        for epoch in range(num_epochs):
-            epoch_train_loss = 0
-            epoch_valid_loss = 0
-            self.train()
-            for batch in train_loader:
-                optimizer.zero_grad()
-                inputs, targets = batch
-                inputs = inputs.to(device)
-                targets = targets.to(device)
-                outputs = self(inputs)
-                print(outputs.shape)
-                print(targets.shape)
-                loss = criterion(outputs, targets)
-                loss.backward()
-                optimizer.step()
-                epoch_train_loss += loss.item()
-            self.eval()
-            for batch in valid_loader:
-                inputs, targets = batch
-                inputs = inputs.to(device)
-                targets = targets.to(device)
-                outputs = self(inputs)
-                loss = criterion(outputs, targets)
-                epoch_valid_loss += loss.item()
-            train_loss.append(epoch_train_loss/len(train_loader))
-            valid_loss.append(epoch_valid_loss/len(valid_loader))
-            print(f'Epoch {epoch+0:03}: | Train Loss: {epoch_train_loss/len(train_loader):.5f} | Validation Loss: {epoch_valid_loss/len(valid_loader):.5f}')
-        return train_loss, valid_loss
-
-    def validate(self, val_loader, device='cpu'):
-        self.eval()
-        predictions = []
-        for batch in val_loader:
-            inputs, targets = batch
-            inputs = inputs.to(device)
-            targets.to(device)
-            outputs = self(inputs)
-            _, preds = torch.max(outputs, 1)
-            predictions.append(preds.cpu().numpy())
-        return predictions
 
     def forward(self, x):
         # Left side of the U-Net
@@ -170,14 +124,37 @@ class UNet(nn.Module):
 
         return conv10
 
-
-def UNet_model(shape=(4, None, None)):
-    model = UNet(in_channels=shape[0], out_channels=9)
-
-    # Define loss function, optimizer, and learning rate scheduler
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-6)
-    # Learning rate scheduler (if needed)
-    # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.1)
-
-    return model, criterion, optimizer
+    def train_model(self, train_loader, valid_loader, num_epochs=100, learning_rate=1e-4, device='cuda'):
+        self.to(device)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+        train_loss = []
+        valid_loss = []
+        for epoch in range(num_epochs):
+            epoch_train_loss = 0
+            epoch_valid_loss = 0
+            self.train()
+            for batch in train_loader:
+                optimizer.zero_grad()
+                inputs, targets = batch
+                inputs = inputs.to(device)
+                targets = targets.to(device)
+                outputs = self(inputs)
+                loss = criterion(outputs, targets)
+                loss.backward()
+                optimizer.step()
+                epoch_train_loss += loss.item()
+                targets.cpu()
+                outputs.cpu()
+            self.eval()
+            for batch in valid_loader:
+                inputs, targets = batch
+                inputs = inputs.to(device)
+                targets = targets.to(device)
+                outputs = self(inputs)
+                loss = criterion(outputs, targets)
+                epoch_valid_loss += loss.item()
+            train_loss.append(epoch_train_loss/len(train_loader))
+            valid_loss.append(epoch_valid_loss/len(valid_loader))
+            print(f'Epoch {epoch+0:03}: | Train Loss: {epoch_train_loss/len(train_loader):.5f} | Validation Loss: {epoch_valid_loss/len(valid_loader):.5f}')
+        return train_loss, valid_loss
