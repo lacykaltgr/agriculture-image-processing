@@ -1,7 +1,10 @@
-import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+import torch
+import numpy as np
+
+from utils import onehot_to_rgb
 
 
 class UNet(nn.Module):
@@ -36,7 +39,6 @@ class UNet(nn.Module):
         self.batchnorm5 = nn.BatchNorm2d(1024)
         self.dropout5 = nn.Dropout2d(p=0.5)
 
-
         # Upsampling Starts, right side of the U-Net
         self.upconv6 = nn.Conv2d(1024, 512, kernel_size=3, padding='same')
         self.conv11 = nn.Conv2d(1024, 512, kernel_size=3, padding='same')
@@ -61,7 +63,7 @@ class UNet(nn.Module):
 
         # Output layer of the U-Net with a softmax activation
         self.conv20 = nn.Conv2d(16, out_channels, kernel_size=1)
-
+        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
         # Left side of the U-Net
@@ -121,6 +123,7 @@ class UNet(nn.Module):
 
         # Output layer of the U-Net with a softmax activation
         conv10 = self.conv20(conv9)
+        conv10 = self.softmax(conv10)
 
         return conv10
 
@@ -137,8 +140,7 @@ class UNet(nn.Module):
             for batch in train_loader:
                 optimizer.zero_grad()
                 inputs, targets = batch
-                inputs = inputs.to(device)
-                targets = targets.to(device)
+                inputs, targets = inputs.to(device), targets.to(device)
                 outputs = self(inputs)
                 loss = criterion(outputs, targets)
                 loss.backward()
@@ -158,3 +160,15 @@ class UNet(nn.Module):
             valid_loss.append(epoch_valid_loss/len(valid_loader))
             print(f'Epoch {epoch+0:03}: | Train Loss: {epoch_train_loss/len(train_loader):.5f} | Validation Loss: {epoch_valid_loss/len(valid_loader):.5f}')
         return train_loss, valid_loss
+
+    def predict(self, test_loader, device='cuda'):
+        self.eval()
+        predictions = []
+        with torch.no_grad():
+            for batch in test_loader:
+                inputs, _ = batch
+                inputs = inputs.to(device)
+                outputs = self(inputs)
+                preds = torch.argmax(outputs, 1)
+                predictions.append(preds.cpu().numpy())
+        return onehot_to_rgb(np.concatenate(predictions))

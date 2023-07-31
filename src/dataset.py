@@ -2,10 +2,10 @@ import numpy as np
 import imageio
 from torch.utils.data import Dataset
 import torch
-from utils import numericalSort
+from utils import numericalSort, rgb_to_onehot, onehot_to_rgb, to_class_no, color_dict
 
 
-class CustomDataset(Dataset):
+class XYDataset(Dataset):
     def __init__(self, x_data, y_data):
         self.x_data = x_data
         self.y_data = y_data
@@ -15,8 +15,9 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx):
         x = torch.transpose(torch.tensor(self.x_data[idx].astype('uint8'), dtype=torch.float), 0, 2)
-        y = torch.transpose(torch.tensor(self.y_data[idx].astype('uint8'), dtype=torch.float), 0, 2)
-        return x, y
+        y = torch.tensor(self.y_data[idx].astype('uint8'), dtype=torch.float)
+        y_onehot = rgb_to_onehot(y, color_dict=color_dict)
+        return x, y_onehot
 
 
 def load_images(fnames):
@@ -28,13 +29,13 @@ def load_images(fnames):
     return d_list
 
 
-def load_dataset():
+def load_dataset(root):
     import glob
 
     # List of file names of actual Satellite images for traininig
-    filelist_trainx = sorted(glob.glob('/content/drive/MyDrive/colab/sat-images/The-Eye-in-the-Sky-dataset/sat/*.tif'), key=numericalSort)
+    filelist_trainx = sorted(glob.glob(root+'The-Eye-in-the-Sky-dataset/sat/*.tif'), key=numericalSort)
     # List of file names of classified images for traininig
-    filelist_trainy = sorted(glob.glob('/content/drive/MyDrive/colab/sat-images/The-Eye-in-the-Sky-dataset/gt/*.tif'), key=numericalSort)
+    filelist_trainy = sorted(glob.glob(root+'The-Eye-in-the-Sky-dataset/gt/*.tif'), key=numericalSort)
     # List of file names of actual Satellite images for testing
     filelist_testx = sorted(glob.glob('/content/drive/MyDrive/colab/sat-images/The-Eye-in-the-Sky-test-data/sat_test/*.tif'), key=numericalSort)
 

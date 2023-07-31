@@ -1,50 +1,28 @@
 import numpy as np
+import torch
 
-def padding(img, w, h, c, crop_size, stride, n_h, n_w):
 
-    w_extra = w - ((n_w-1)*stride)
-    w_toadd = crop_size - w_extra
-
-    h_extra = h - ((n_h-1)*stride)
-    h_toadd = crop_size - h_extra
-
-    img_pad = np.zeros(((h+h_toadd), (w+w_toadd), c))
-    #img_pad[:h, :w,:] = img
-    #img_pad = img_pad+img
-    img_pad = np.pad(img, [(0, h_toadd), (0, w_toadd), (0,0)], mode='constant')
-
-    return img_pad
-
+color_dict = {0: torch.tensor([0, 0, 0]),
+              1: torch.tensor([0, 125, 0]),
+              2: torch.tensor([150, 80, 0]),
+              3: torch.tensor([255, 255, 0]),
+              4: torch.tensor([100, 100, 100]),
+              5: torch.tensor([0, 255, 0]),
+              6: torch.tensor([0, 0, 150]),
+              7: torch.tensor([150, 150, 255]),
+              8: torch.tensor([255, 255, 255])}
 
 
 def pad_to_square(image, fill_color=0):
-    """
-    Pad the input image to a square shape.
-
-    Parameters:
-        image (numpy.ndarray): The input image as a NumPy array.
-        fill_color (int or tuple): The value to be used for padding. Default is 0.
-
-    Returns:
-        numpy.ndarray: The padded square image as a NumPy array.
-    """
     height, width = image.shape[:2]
     max_dim = max(width, height)
-
     # Calculate padding size for both sides
     left_padding = (max_dim - width) // 2
     top_padding = (max_dim - height) // 2
-
-    # Calculate right and bottom padding
-    right_padding = max_dim - width - left_padding
-    bottom_padding = max_dim - height - top_padding
-
     # Create a new square canvas with the desired value for padding
     padded_image = np.full((max_dim, max_dim) + image.shape[2:], fill_color, dtype=image.dtype)
-
     # Paste the original image onto the new canvas
     padded_image[top_padding:top_padding+height, left_padding:left_padding+width, ...] = image
-
     return padded_image
 
 
@@ -52,7 +30,7 @@ def rgb_to_onehot(rgb_arr, color_dict):
     num_classes = len(color_dict)
     shape = rgb_arr.shape[:2]+(num_classes,)
     print(shape)
-    arr = np.zeros( shape, dtype=np.int8 )
+    arr = np.zeros(shape, dtype=np.int8 )
     for i, cls in enumerate(color_dict):
         arr[:,:,i] = np.all(rgb_arr.reshape( (-1,3) ) == color_dict[i], axis=1).reshape(shape[:2])
     return arr
