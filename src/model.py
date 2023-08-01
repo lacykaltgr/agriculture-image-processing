@@ -175,6 +175,8 @@ class UNet(nn.Module):
                 inputs = inputs.to(device)
                 targets = targets.to(device)
                 outputs = self(inputs)
+                outputs = outputs.reshape(outputs.shape[1], outputs.shape[2]*outputs.shape[3])
+                targets = targets.reshape(targets.shape[1], targets.shape[2]*targets.shape[3]).float()
                 loss = criterion(outputs, targets)
                 epoch_valid_loss += loss.item()
             train_loss.append(epoch_train_loss/len(train_loader))
