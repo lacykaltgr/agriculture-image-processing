@@ -4,11 +4,11 @@ import torch.nn.functional as F
 import torch
 import numpy as np
 
-from utils import onehot_to_rgb
+from src.utils import onehot_to_rgb
 
 
 class UNet(nn.Module):
-    def __init__(self, in_channels=4, out_channels=3):
+    def __init__(self, in_channels=4, out_channels=9):
         super(UNet, self).__init__()
 
         # Left side of the U-Net
@@ -142,6 +142,9 @@ class UNet(nn.Module):
                 inputs, targets = batch
                 inputs, targets = inputs.to(device), targets.to(device)
                 outputs = self(inputs)
+                outputs = outputs.reshape(outputs.shape[1], outputs.shape[2]*outputs.shape[3])
+                targets = targets.reshape(targets.shape[1], targets.shape[2]*targets.shape[3]).float()
+                print(outputs.shape, targets.shape)
                 loss = criterion(outputs, targets)
                 loss.backward()
                 optimizer.step()

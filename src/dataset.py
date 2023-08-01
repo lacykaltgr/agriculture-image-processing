@@ -2,7 +2,7 @@ import numpy as np
 import imageio
 from torch.utils.data import Dataset
 import torch
-from utils import numericalSort, rgb_to_onehot, onehot_to_rgb, to_class_no, color_dict
+from src.utils import numericalSort, rgb_to_onehot, color_dict
 
 
 class XYDataset(Dataset):
@@ -17,7 +17,7 @@ class XYDataset(Dataset):
         x = torch.transpose(torch.tensor(self.x_data[idx].astype('uint8'), dtype=torch.float), 0, 2)
         y = torch.tensor(self.y_data[idx].astype('uint8'), dtype=torch.float)
         y_onehot = rgb_to_onehot(y, color_dict=color_dict)
-        return x, y_onehot
+        return x, np.transpose(y_onehot, (2, 1, 0))
 
 
 def load_images(fnames):
@@ -37,7 +37,7 @@ def load_dataset(root):
     # List of file names of classified images for traininig
     filelist_trainy = sorted(glob.glob(root+'The-Eye-in-the-Sky-dataset/gt/*.tif'), key=numericalSort)
     # List of file names of actual Satellite images for testing
-    filelist_testx = sorted(glob.glob('/content/drive/MyDrive/colab/sat-images/The-Eye-in-the-Sky-test-data/sat_test/*.tif'), key=numericalSort)
+    filelist_testx = sorted(glob.glob(root+'The-Eye-in-the-Sky-test-data/sat_test/*.tif'), key=numericalSort)
 
     # Making array of all the training sat images as it is without any cropping
     x = load_images(filelist_trainx)
