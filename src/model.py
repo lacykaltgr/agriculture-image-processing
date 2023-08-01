@@ -7,6 +7,24 @@ import numpy as np
 from src.utils import onehot_to_rgb
 
 
+class EarlyStopper:
+    def __init__(self, patience=1, min_delta=0):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.min_validation_loss = np.inf
+
+    def early_stop(self, validation_loss):
+        if validation_loss < self.min_validation_loss:
+            self.min_validation_loss = validation_loss
+            self.counter = 0
+        elif validation_loss > (self.min_validation_loss + self.min_delta):
+            self.counter += 1
+            if self.counter >= self.patience:
+                return True
+        return False
+
+
 class UNet(nn.Module):
     def __init__(self, in_channels=4, out_channels=9):
         super(UNet, self).__init__()
@@ -127,7 +145,7 @@ class UNet(nn.Module):
 
         return conv10
 
-    def train_model(self, train_loader, valid_loader, num_epochs=100, learning_rate=1e-4, device='cuda'):
+    def train_model(self, train_loader, valid_loader, early_stopper, num_epochs=100, learning_rate=1e-4, device='cuda'):
         self.to(device)
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(self.parameters(), lr=learning_rate)
@@ -162,6 +180,8 @@ class UNet(nn.Module):
             train_loss.append(epoch_train_loss/len(train_loader))
             valid_loss.append(epoch_valid_loss/len(valid_loader))
             print(f'Epoch {epoch+0:03}: | Train Loss: {epoch_train_loss/len(train_loader):.5f} | Validation Loss: {epoch_valid_loss/len(valid_loader):.5f}')
+            if early_stopper.early_stop(loss):
+                break
         return train_loss, valid_loss
 
     def predict(self, test_loader, device='cuda'):
