@@ -154,30 +154,47 @@ class UNet(nn.Module):
         for epoch in range(num_epochs):
             epoch_train_loss = 0
             epoch_valid_loss = 0
+            correct_train = 0
+            total_train = 0
             self.train()
             for batch in train_loader:
                 optimizer.zero_grad()
                 inputs, targets = batch
-                inputs, targets = inputs.to(device), targets.to(device).float()
+                inputs, targets = inputs.to(device), targets.to(device)
                 outputs = self(inputs)
                 loss = criterion(outputs, targets)
                 loss.backward()
                 optimizer.step()
                 epoch_train_loss += loss.item()
-                targets.cpu()
-                outputs.cpu()
+
+                _, predicted_train = torch.max(outputs.data, 1)
+                total_train += targets.size(0)
+                correct_train += (predicted_train == targets).sum().item()
+
+            train_accuracy = 100 * correct_train / total_train
+
             self.eval()
+            correct_valid = 0
+            total_valid = 0
             for batch in valid_loader:
                 inputs, targets = batch
                 inputs = inputs.to(device)
-                targets = targets.to(device).float()
+                targets = targets.to(device)
                 outputs = self(inputs)
                 loss = criterion(outputs, targets)
                 epoch_valid_loss += loss.item()
+
+                _, predicted_valid = torch.max(outputs.data, 1)
+                total_valid += targets.size(0)
+                correct_valid += (predicted_valid == targets).sum().item()
+
+            valid_accuracy = 100 * correct_valid / total_valid
+
             train_loss.append(epoch_train_loss/len(train_loader))
             valid_loss.append(epoch_valid_loss/len(valid_loader))
-            print(f'Epoch {epoch+0:03}: | Train Loss: {epoch_train_loss/len(train_loader):.5f} | Validation Loss: {epoch_valid_loss/len(valid_loader):.5f}')
-            if early_stopper.early_stop(loss):
+            print(f'Epoch {epoch+1:03}: | Train Loss: {epoch_train_loss/len(train_loader):.5f} | Validation Loss: {epoch_valid_loss/len(valid_loader):.5f} | Train Acc: {train_accuracy:.2f}% | Valid Acc: {valid_accuracy:.2f}%')
+
+            if early_stopper.early_stop(epoch_valid_loss):
                 break
         return train_loss, valid_loss
 
