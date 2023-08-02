@@ -158,11 +158,8 @@ class UNet(nn.Module):
             for batch in train_loader:
                 optimizer.zero_grad()
                 inputs, targets = batch
-                inputs, targets = inputs.to(device), targets.to(device)
+                inputs, targets = inputs.to(device), targets.to(device).float()
                 outputs = self(inputs)
-                outputs = outputs.reshape(outputs.shape[1], outputs.shape[2]*outputs.shape[3])
-                targets = targets.reshape(targets.shape[1], targets.shape[2]*targets.shape[3]).float()
-                print(outputs.shape, targets.shape)
                 loss = criterion(outputs, targets)
                 loss.backward()
                 optimizer.step()
@@ -173,10 +170,8 @@ class UNet(nn.Module):
             for batch in valid_loader:
                 inputs, targets = batch
                 inputs = inputs.to(device)
-                targets = targets.to(device)
+                targets = targets.to(device).float()
                 outputs = self(inputs)
-                outputs = outputs.reshape(outputs.shape[1], outputs.shape[2]*outputs.shape[3])
-                targets = targets.reshape(targets.shape[1], targets.shape[2]*targets.shape[3]).float()
                 loss = criterion(outputs, targets)
                 epoch_valid_loss += loss.item()
             train_loss.append(epoch_train_loss/len(train_loader))
