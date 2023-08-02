@@ -83,6 +83,27 @@ class UNet(nn.Module):
         self.conv20 = nn.Conv2d(16, out_channels, kernel_size=1)
         self.softmax = nn.Softmax(dim=1)
 
+        torch.nn.init.xavier_uniform(self.conv1.weight)
+        torch.nn.init.xavier_uniform(self.conv2.weight)
+        torch.nn.init.xavier_uniform(self.conv3.weight)
+        torch.nn.init.xavier_uniform(self.conv4.weight)
+        torch.nn.init.xavier_uniform(self.conv5.weight)
+        torch.nn.init.xavier_uniform(self.conv6.weight)
+        torch.nn.init.xavier_uniform(self.conv7.weight)
+        torch.nn.init.xavier_uniform(self.conv8.weight)
+        torch.nn.init.xavier_uniform(self.conv9.weight)
+        torch.nn.init.xavier_uniform(self.conv10.weight)
+        torch.nn.init.xavier_uniform(self.conv11.weight)
+        torch.nn.init.xavier_uniform(self.conv12.weight)
+        torch.nn.init.xavier_uniform(self.conv13.weight)
+        torch.nn.init.xavier_uniform(self.conv14.weight)
+        torch.nn.init.xavier_uniform(self.conv15.weight)
+        torch.nn.init.xavier_uniform(self.conv16.weight)
+        torch.nn.init.xavier_uniform(self.conv17.weight)
+        torch.nn.init.xavier_uniform(self.conv18.weight)
+        torch.nn.init.xavier_uniform(self.conv19.weight)
+        torch.nn.init.xavier_uniform(self.conv20.weight)
+
     def forward(self, x):
         # Left side of the U-Net
         conv1 = F.relu(self.conv1(x))
