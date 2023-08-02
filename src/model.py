@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch
 import numpy as np
 
-from src.utils import onehot_to_rgb
+from src.utils import onehot_to_rgb,  color_dict
 
 
 class EarlyStopper:
@@ -160,7 +160,7 @@ class UNet(nn.Module):
             for batch in train_loader:
                 optimizer.zero_grad()
                 inputs, targets = batch
-                inputs, targets = inputs.to(device), targets.to(device)
+                inputs, targets = inputs.to(device).float(), targets.to(device).float()
                 outputs = self(inputs)
                 loss = criterion(outputs, targets)
                 loss.backward()
@@ -168,7 +168,7 @@ class UNet(nn.Module):
                 epoch_train_loss += loss.item()
 
                 _, predicted_train = torch.max(outputs.data, 1)
-                total_train += targets.size(0)
+                total_train += np.prod(targets.size())
                 correct_train += (predicted_train == targets).sum().item()
 
             train_accuracy = 100 * correct_train / total_train
@@ -178,14 +178,14 @@ class UNet(nn.Module):
             total_valid = 0
             for batch in valid_loader:
                 inputs, targets = batch
-                inputs = inputs.to(device)
-                targets = targets.to(device)
+                inputs = inputs.to(device).float()
+                targets = targets.to(device).float()
                 outputs = self(inputs)
                 loss = criterion(outputs, targets)
                 epoch_valid_loss += loss.item()
 
                 _, predicted_valid = torch.max(outputs.data, 1)
-                total_valid += targets.size(0)
+                total_valid += np.prod(targets.size())
                 correct_valid += (predicted_valid == targets).sum().item()
 
             valid_accuracy = 100 * correct_valid / total_valid
@@ -208,4 +208,23 @@ class UNet(nn.Module):
                 outputs = self(inputs)
                 preds = torch.argmax(outputs, 1)
                 predictions.append(preds.cpu().numpy())
-        return onehot_to_rgb(np.concatenate(predictions))
+        results = []
+        for batch in predictions:
+            for img in batch:
+                results.append(onehot_to_rgb(img, color_dict=color_dict))
+        return results
+
+    def evaluate(self, test_loader, device='cuda'):
+        self.eval()
+        correct = 0
+        total = 0
+        with torch.no_grad():
+            for batch in test_loader:
+                inputs, targets = batch
+                inputs = inputs.to(device)
+                targets = targets.to(device)
+                outputs = self(inputs)
+                _, predicted = torch.max(outputs.data, 1)
+                total += np.prod(targets.size())
+                correct += (predicted == targets).sum().item()
+        return 100 * correct / total

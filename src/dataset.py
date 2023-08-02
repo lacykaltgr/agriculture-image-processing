@@ -14,8 +14,8 @@ class XYDataset(Dataset):
         return len(self.x_data)
 
     def __getitem__(self, idx):
-        x = torch.transpose(torch.tensor(self.x_data[idx].astype('uint8'), dtype=torch.float), 0, 2)
-        y = torch.tensor(self.y_data[idx].astype('uint8'), dtype=torch.float)
+        x = torch.transpose(torch.tensor(self.x_data[idx].astype('uint8')).float(), 0, 2)
+        y = torch.tensor(self.y_data[idx].astype('uint8')).float()
         y_onehot = rgb_to_onehot(y, color_dict=color_dict)
         return x, np.transpose(y_onehot, (2, 1, 0))
 
