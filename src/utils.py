@@ -96,8 +96,6 @@ def padding(img, w, h, c, crop_size, stride, n_h, n_w):
 
 
 def crop(a, crop_size=128):
-
-    #stride = int(crop_size/2)
     stride = 32
 
     croped_images = []
