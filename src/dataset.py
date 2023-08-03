@@ -2,13 +2,19 @@ import numpy as np
 import imageio
 from torch.utils.data import Dataset
 import torch
-from src.utils import numericalSort, rgb_to_onehot, color_dict
+from src.utils import numericalSort, rgb_to_onehot, color_dict, crop
 
 
 class XYDataset(Dataset):
-    def __init__(self, x_data, y_data):
-        self.x_data = x_data
-        self.y_data = y_data
+    def __init__(self, x_data, y_data, crop_size=128):
+        self.x_data = []
+        self.y_data = []
+        for i in range(len(x_data)):
+            cropped_x = crop(x_data[i], crop_size)
+            cropped_y = crop(y_data[i], crop_size)
+            for x, y in zip(cropped_x, cropped_y):
+                self.x_data.append(x)
+                self.y_data.append(y)
 
     def __len__(self):
         return len(self.x_data)
