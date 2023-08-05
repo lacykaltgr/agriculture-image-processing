@@ -37,10 +37,9 @@ def rgb_to_onehot(rgb_arr, color_dict):
 
 
 def onehot_to_rgb(onehot, color_dict):
-    single_layer = np.argmax(onehot, axis=-1)
-    output = np.zeros( onehot.shape[:2]+(3,))
+    output = np.zeros(onehot.shape+(3,))
     for k in color_dict.keys():
-        output[single_layer == k] = color_dict[k]
+        output[onehot == k] = color_dict[k].numpy()
     return np.uint8(output)
 
 
