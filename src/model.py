@@ -188,7 +188,7 @@ class UNet(nn.Module):
                 optimizer.step()
                 epoch_train_loss += loss.item()
 
-                acc_predictions_train = torch.max(outputs, 1)
+                _, acc_predictions_train = torch.max(outputs, 1)
                 _, acc_targets_train = torch.max(targets, 1)
                 total_train += np.prod(acc_targets_train.size())
                 correct_train += (acc_predictions_train == acc_targets_train).sum().item()
@@ -209,7 +209,7 @@ class UNet(nn.Module):
                 loss = criterion(outputs, targets)
                 epoch_valid_loss += loss.item()
 
-                acc_predictions = torch.max(outputs, 1)
+                _, acc_predictions = torch.max(outputs, 1)
                 _, acc_targets = torch.max(targets, 1)
                 total_valid += np.prod(acc_targets.size())
                 correct_valid += (acc_predictions == acc_targets).sum().item()
@@ -254,7 +254,7 @@ class UNet(nn.Module):
                 targets = targets.to(device)
                 outputs = self(inputs)
 
-                acc_predictions = torch.max(outputs, 1)
+                _, acc_predictions = torch.max(outputs, 1)
                 _, acc_targets = torch.max(targets, 1)
                 total += np.prod(acc_targets.size())
                 correct += (acc_predictions == acc_targets).sum().item()
