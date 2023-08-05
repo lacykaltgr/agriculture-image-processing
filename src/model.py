@@ -188,9 +188,10 @@ class UNet(nn.Module):
                 optimizer.step()
                 epoch_train_loss += loss.item()
 
-                _, predicted_train = torch.max(outputs.data, 1)
-                total_train += np.prod(targets.size())
-                correct_train += (predicted_train == targets).sum().item()
+                acc_predictions_train = torch.max(outputs.detach().cpu(), 1)
+                acc_targets_train = torch.max(targets.detach.cpu(), 1)
+                total_train += np.prod(acc_targets_train.size())
+                correct_train += (acc_predictions_train == acc_targets_train).sum().item()
 
             train_accuracy = 100 * correct_train / total_train
 
@@ -205,9 +206,12 @@ class UNet(nn.Module):
                 loss = criterion(outputs, targets)
                 epoch_valid_loss += loss.item()
 
-                _, predicted_valid = torch.max(outputs.data, 1)
-                total_valid += np.prod(targets.size())
-                correct_valid += (predicted_valid == targets).sum().item()
+                outputs.detach().cpu()
+                targets.detach().cpu()
+                acc_predictions = torch.max(outputs.detach().cpu(), 1)
+                acc_targets = torch.max(targets.detach.cpu(), 1)
+                total_valid += np.prod(acc_targets.size())
+                correct_valid += (acc_predictions == acc_targets).sum().item()
 
             valid_accuracy = 100 * correct_valid / total_valid
 
@@ -228,7 +232,7 @@ class UNet(nn.Module):
                 inputs = inputs.to(device)
                 outputs = self(inputs)
                 preds = torch.argmax(outputs, 1)
-                predictions.append(preds.cpu().numpy())
+                predictions.append(preds.detach().cpu().numpy())
         results = []
         for batch in predictions:
             for img in batch:
@@ -245,7 +249,11 @@ class UNet(nn.Module):
                 inputs = inputs.to(device)
                 targets = targets.to(device)
                 outputs = self(inputs)
-                _, predicted = torch.max(outputs.data, 1)
-                total += np.prod(targets.size())
-                correct += (predicted == targets).sum().item()
+
+                outputs.detach().cpu()
+                targets.detach().cpu()
+                acc_predictions = torch.max(outputs.detach().cpu(), 1)
+                acc_targets = torch.max(targets.detach.cpu(), 1)
+                total += np.prod(acc_targets.size()[:-2])
+                correct += (acc_predictions == acc_targets).sum().item()
         return 100 * correct / total
