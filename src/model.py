@@ -206,12 +206,13 @@ class UNet(nn.Module):
                 loss = criterion(outputs, targets)
                 epoch_valid_loss += loss.item()
 
-                outputs.detach().cpu()
-                targets.detach().cpu()
-                acc_predictions = torch.max(outputs.detach().cpu(), 1)
-                acc_targets = torch.max(targets.detach.cpu(), 1)
+                acc_predictions = torch.max(outputs, 1)
+                _, acc_targets = torch.max(targets, 1)
                 total_valid += np.prod(acc_targets.size())
                 correct_valid += (acc_predictions == acc_targets).sum().item()
+
+                outputs.detach().cpu()
+                targets.detach().cpu()
 
             valid_accuracy = 100 * correct_valid / total_valid
 
@@ -231,7 +232,7 @@ class UNet(nn.Module):
                 inputs, _ = batch
                 inputs = inputs.to(device)
                 outputs = self(inputs)
-                preds = torch.argmax(outputs, 1)
+                _, preds = torch.max(outputs, 1)
                 predictions.append(preds.detach().cpu().numpy())
         results = []
         for batch in predictions:
@@ -250,10 +251,11 @@ class UNet(nn.Module):
                 targets = targets.to(device)
                 outputs = self(inputs)
 
+                acc_predictions = torch.max(outputs, 1)
+                _, acc_targets = torch.max(targets, 1)
+                total += np.prod(acc_targets.size())
+                correct += (acc_predictions == acc_targets).sum().item()
+
                 outputs.detach().cpu()
                 targets.detach().cpu()
-                acc_predictions = torch.max(outputs.detach().cpu(), 1)
-                acc_targets = torch.max(targets.detach.cpu(), 1)
-                total += np.prod(acc_targets.size()[:-2])
-                correct += (acc_predictions == acc_targets).sum().item()
         return 100 * correct / total
