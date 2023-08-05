@@ -189,7 +189,7 @@ class UNet(nn.Module):
                 epoch_train_loss += loss.item()
 
                 acc_predictions_train = torch.max(outputs.detach().cpu(), 1)
-                acc_targets_train = torch.max(targets.detach.cpu(), 1)
+                acc_targets_train = torch.max(targets.detach().cpu(), 1)
                 total_train += np.prod(acc_targets_train.size())
                 correct_train += (acc_predictions_train == acc_targets_train).sum().item()
 
