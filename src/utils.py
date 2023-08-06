@@ -36,7 +36,7 @@ def rgb_to_onehot(rgb_arr, color_dict):
     return arr
 
 
-def onehot_to_rgb(onehot, color_dict):
+def onehot_to_rgb(onehot):
     output = np.zeros(onehot.shape+(3,))
     for k in color_dict.keys():
         output[onehot == k] = color_dict[k].numpy()
@@ -60,62 +60,22 @@ def numericalSort(value):
     return parts
 
 
-def add_pixals(img, h, w, c, n_h, n_w, crop_size, stride):
-
-    w_extra = w - ((n_w-1)*stride)
-    w_toadd = crop_size - w_extra
-
-    h_extra = h - ((n_h-1)*stride)
-    h_toadd = crop_size - h_extra
-
-    img_add = np.zeros(((h+h_toadd), (w+w_toadd), c))
-
-    img_add[:h, :w,:] = img
-    img_add[h:, :w,:] = img[:h_toadd,:, :]
-    img_add[:h,w:,:] = img[:,:w_toadd,:]
-    img_add[h:,w:,:] = img[h-h_toadd:h,w-w_toadd:w,:]
-
-    return img_add
-
-
-def padding(img, w, h, c, crop_size, stride, n_h, n_w):
-
-    w_extra = w - ((n_w-1)*stride)
-    w_toadd = crop_size - w_extra
-
-    h_extra = h - ((n_h-1)*stride)
-    h_toadd = crop_size - h_extra
-
-    img_pad = np.zeros(((h+h_toadd), (w+w_toadd), c))
-    #img_pad[:h, :w,:] = img
-    #img_pad = img_pad+img
-    img_pad = np.pad(img, [(0, h_toadd), (0, w_toadd), (0,0)], mode='constant')
-
-    return img_pad
-
-
-def crop(a, crop_size=128):
-    stride = 32
-
+def crop(img, crop_size=256, stride=None):
+    if stride is None:
+        stride = crop_size/2
     croped_images = []
-    h, w, c = a.shape
+    h, w, c = img.shape
 
-    n_h = int(int(h/stride))
-    n_w = int(int(w/stride))
+    n_h = math.ceil((h-crop_size)/stride+1)
+    n_w = math.ceil((w-crop_size)/stride+1)
 
-    # Padding using the padding function we wrote
-    a = padding(a, w, h, c, crop_size, stride, n_h, n_w)
-
-    # Resizing as required
-    ##a = resize(a, stride, n_h, n_w)
-
-    # Adding pixals as required
-    #a = add_pixals(a, h, w, c, n_h, n_w, crop_size, stride)
-
-    # Slicing the image into 128*128 crops with a stride of 64
-    for i in range(n_h-1):
-        for j in range(n_w-1):
-            crop_x = a[(i*stride):((i*stride)+crop_size), (j*stride):((j*stride)+crop_size), :]
+    for i in range(n_h):
+        h1 = min(int(i*stride), h-crop_size)
+        h2 = min(int(i*stride+crop_size), h)
+        for j in range(n_w):
+            w1 = min(int(j*stride), w-crop_size)
+            w2 = min(int(j*stride+crop_size), w)
+            crop_x = img[h1:h2, w1:w2, :]
             croped_images.append(crop_x)
     return croped_images
 
@@ -128,8 +88,8 @@ def conf_matrix(val_dataset, predictions, plot=True):
     i = 0
     for batch in predictions:
         for image in batch:
-            pred = np.argmax(image, axis=0).flatten()
-            target = np.argmax(val_dataset[i][1].numpy(), axis=0).flatten()
+            pred = image.flatten()
+            target = np.argmax(val_dataset[i][1], axis=0).flatten()
 
             conf_matrix_batch = confusion_matrix(pred, target, labels=range(num_classes))
             total_conf_matrix += conf_matrix_batch
