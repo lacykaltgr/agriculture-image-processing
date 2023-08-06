@@ -43,19 +43,20 @@ class UNet(nn.Module):
         self.conv5 = nn.Conv2d(128, 256, kernel_size=3, padding='same')
         self.conv6 = nn.Conv2d(256, 256, kernel_size=3, padding='same')
         self.batchnorm3 = nn.BatchNorm2d(256)
+        self.dropout1 = nn.Dropout2d(p=0.3)
         self.pool3 = nn.MaxPool2d(2)
 
         self.conv7 = nn.Conv2d(256, 512, kernel_size=3, padding='same')
         self.conv8 = nn.Conv2d(512, 512, kernel_size=3, padding='same')
         self.batchnorm4 = nn.BatchNorm2d(512)
-        self.dropout4 = nn.Dropout2d(p=0.5)
+        self.dropout2 = nn.Dropout2d(p=0.3)
         self.pool4 = nn.MaxPool2d(2)
 
         # Bottom of the U-Net
         self.conv9 = nn.Conv2d(512, 1024, kernel_size=3, padding='same')
         self.conv10 = nn.Conv2d(1024, 1024, kernel_size=3, padding='same')
         self.batchnorm5 = nn.BatchNorm2d(1024)
-        self.dropout5 = nn.Dropout2d(p=0.5)
+        self.dropout3 = nn.Dropout2d(p=0.3)
 
         # Upsampling Starts, right side of the U-Net
         self.upconv6 = nn.Conv2d(1024, 512, kernel_size=3, padding='same')
@@ -119,19 +120,20 @@ class UNet(nn.Module):
         conv3 = F.relu(self.conv5(pool2))
         conv3 = F.relu(self.conv6(conv3))
         conv3 = self.batchnorm3(conv3)
-        pool3 = self.pool3(conv3)
+        drop3 = self.dropout1(conv3)
+        pool3 = self.pool3(drop3)
 
         conv4 = F.relu(self.conv7(pool3))
         conv4 = F.relu(self.conv8(conv4))
         conv4 = self.batchnorm4(conv4)
-        drop4 = self.dropout4(conv4)
+        drop4 = self.dropout2(conv4)
         pool4 = self.pool4(drop4)
 
         # Bottom of the U-Net
         conv5 = F.relu(self.conv9(pool4))
         conv5 = F.relu(self.conv10(conv5))
         conv5 = self.batchnorm5(conv5)
-        drop5 = self.dropout5(conv5)
+        drop5 = self.dropout3(conv5)
 
         # Upsampling Starts, right side of the U-Net
         intp = F.interpolate(drop5, size=drop4.shape[2:], mode='bilinear', align_corners=True)
@@ -238,7 +240,7 @@ class UNet(nn.Module):
         results = []
         for batch in predictions:
             for img in batch:
-                results.append(onehot_to_rgb(img, color_dict=color_dict) if onehot else img)
+                results.append(onehot_to_rgb(img) if onehot else img)
         return results, predictions
 
     def evaluate(self, test_loader, device='cuda'):
