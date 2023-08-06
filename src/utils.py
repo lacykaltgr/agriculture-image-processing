@@ -118,3 +118,32 @@ def crop(a, crop_size=128):
             crop_x = a[(i*stride):((i*stride)+crop_size), (j*stride):((j*stride)+crop_size), :]
             croped_images.append(crop_x)
     return croped_images
+
+
+def conf_matrix(val_dataset, predictions, plot=True):
+    from sklearn.metrics import confusion_matrix
+    num_classes = 9
+    total_conf_matrix = np.zeros((num_classes, num_classes), dtype=np.int)
+
+    i = 0
+    for batch in predictions:
+        for image in batch:
+            pred = np.argmax(image, axis=0).flatten()
+            target = np.argmax(val_dataset[i][1].numpy(), axis=0).flatten()
+
+            conf_matrix_batch = confusion_matrix(pred, target, labels=range(num_classes))
+            total_conf_matrix += conf_matrix_batch
+            i += 1
+
+    if plot:
+        class_labels = list(range(num_classes))
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(total_conf_matrix, annot=True, cmap='Blues', fmt='d', xticklabels=class_labels, yticklabels=class_labels)
+        plt.xlabel('Predicted')
+        plt.ylabel('True')
+        plt.title('Confusion Matrix')
+        plt.show()
+
+    return total_conf_matrix

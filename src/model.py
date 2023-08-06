@@ -169,7 +169,7 @@ class UNet(nn.Module):
     def train_model(self, train_loader, valid_loader, early_stopper, num_epochs=100, learning_rate=1e-4, device='cuda'):
         self.to(device)
         criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+        optimizer = optim.Adam(self.parameters(), lr=learning_rate, weight_decay=1e-5)
         train_loss = []
         valid_loss = []
         for epoch in range(num_epochs):
@@ -188,10 +188,9 @@ class UNet(nn.Module):
                 optimizer.step()
                 epoch_train_loss += loss.item()
 
-                _, acc_predictions_train = torch.max(outputs, 1)
-                _, acc_targets_train = torch.max(targets, 1)
-                total_train += np.prod(acc_targets_train.size())
-                correct_train += (acc_predictions_train == acc_targets_train).sum().item()
+                c, t = self._accuracy_score(targets, outputs)
+                correct_train += c
+                total_train += t
 
                 outputs.detach().cpu()
                 targets.detach().cpu()
@@ -209,10 +208,9 @@ class UNet(nn.Module):
                 loss = criterion(outputs, targets)
                 epoch_valid_loss += loss.item()
 
-                _, acc_predictions = torch.max(outputs, 1)
-                _, acc_targets = torch.max(targets, 1)
-                total_valid += np.prod(acc_targets.size())
-                correct_valid += (acc_predictions == acc_targets).sum().item()
+                c, t = self._accuracy_score(targets, outputs)
+                correct_valid += c
+                total_valid += t
 
                 outputs.detach().cpu()
                 targets.detach().cpu()
@@ -227,7 +225,7 @@ class UNet(nn.Module):
                 break
         return train_loss, valid_loss
 
-    def predict(self, test_loader, device='cuda'):
+    def predict(self, test_loader, onehot=True, device='cuda'):
         self.eval()
         predictions = []
         with torch.no_grad():
@@ -240,8 +238,8 @@ class UNet(nn.Module):
         results = []
         for batch in predictions:
             for img in batch:
-                results.append(onehot_to_rgb(img, color_dict=color_dict))
-        return results
+                results.append(onehot_to_rgb(img, color_dict=color_dict) if onehot else img)
+        return results, predictions
 
     def evaluate(self, test_loader, device='cuda'):
         self.eval()
@@ -254,11 +252,20 @@ class UNet(nn.Module):
                 targets = targets.to(device)
                 outputs = self(inputs)
 
-                _, acc_predictions = torch.max(outputs, 1)
-                _, acc_targets = torch.max(targets, 1)
-                total += np.prod(acc_targets.size())
-                correct += (acc_predictions == acc_targets).sum().item()
+                c, t = self._accuracy_score(targets, outputs)
+                correct += c
+                total += t
 
                 outputs.detach().cpu()
                 targets.detach().cpu()
+
         return 100 * correct / total
+
+    @staticmethod
+    def _accuracy_score(y_true, y_pred):
+        _, acc_predictions = torch.max(y_pred, 1)
+        _, acc_targets = torch.max(y_true, 1)
+        total = np.prod(acc_targets.size())
+        correct = (acc_predictions == acc_targets).sum().item()
+        return correct, total
+
