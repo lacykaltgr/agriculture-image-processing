@@ -107,3 +107,16 @@ def conf_matrix(val_dataset, predictions, plot=True):
         plt.show()
 
     return total_conf_matrix
+
+def predict_windows(model, windows):
+    predicted_windows = []
+
+    for window in windows:
+        input_tensor = torch.tensor(window.data, dtype=torch.float32)
+        input_tensor = input_tensor.permute(2, 0, 1)  # Change shape from (256, 256, 4) to (4, 256, 256)
+        input_tensor = input_tensor.unsqueeze(0)  # Add batch dimension
+
+        prediction = model(input_tensor)
+        predicted_windows.append(prediction[0].detach().numpy())
+
+    return predicted_windows
