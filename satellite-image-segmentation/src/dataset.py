@@ -2,7 +2,7 @@ import numpy as np
 import imageio
 from torch.utils.data import Dataset
 import torch
-from src.utils import numericalSort, rgb_to_onehot, color_dict, crop
+from utils import numericalSort, rgb_to_onehot, color_dict, crop
 
 
 class XYDataset(Dataset):
@@ -20,8 +20,11 @@ class XYDataset(Dataset):
         return len(self.x_data)
 
     def __getitem__(self, idx):
-        x = torch.transpose(torch.tensor(self.x_data[idx].astype('uint8')).float(), 0, 2)
-        y = torch.tensor(self.y_data[idx].astype('uint8')).float()
+        print(np.max(self.x_data[idx]))
+        x = torch.tensor(self.x_data[idx].astype('uint8'))
+        print(x)
+        print(x*16)
+        y = torch.tensor(self.y_data[idx].astype('uint8'))
         y_onehot = rgb_to_onehot(y, color_dict=color_dict)
         return x, np.transpose(y_onehot, (2, 1, 0))
 
