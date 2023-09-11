@@ -4,52 +4,24 @@ import math
 import matplotlib.pyplot as plt
 
 color_dict = {
-    # 0: torch.tensor([255, 255, 255]),  # White (Background)
     0: torch.tensor([255, 0, 0]),      # Red (Not Trees)
     1: torch.tensor([0, 255, 0])       # Green (Tree Trunks)
 }
 
 
-def pad_to_square(image, fill_color=0):
-    height, width = image.shape[:2]
-    max_dim = max(width, height)
-    # Calculate padding size for both sides
-    left_padding = (max_dim - width) // 2
-    top_padding = (max_dim - height) // 2
-    # Create a new square canvas with the desired value for padding
-    padded_image = np.full((max_dim, max_dim) + image.shape[2:], fill_color, dtype=image.dtype)
-    # Paste the original image onto the new canvas
-    padded_image[top_padding:top_padding+height, left_padding:left_padding+width, ...] = image
-    return padded_image
-
-# transform rgb pixels to binary based on 2 item colour dict
-# q: why error cls is not defined?
-
-def rgb_to_onehot(rgb_arr, color_dict):
-    num_classes = len(color_dict)
+def rgb_to_binary(rgb_arr: np.array, color_dict):
     shape = (1,)+rgb_arr.shape[1:]
-    transpose = np.transpose(rgb_arr, (1,2,0))
-    color_match = torch.all(transpose == color_dict[1], dim=2)
+    color_match = np.all(rgb_arr == color_dict[1], dim=2)
     arr = np.zeros(shape, dtype=np.uint8)
-    arr[0, :, :] = color_match.int()
+    arr[0, :, :] = np.uint8(color_match)
     return arr
 
 
-
-def onehot_to_rgb(onehot):
+def binary_to_rgb(onehot):
     output = np.zeros(onehot.shape+(3,))
     for k in color_dict.keys():
         output[onehot == k] = color_dict[k].numpy()
     return np.uint8(output)
-
-
-def to_class_no(y_hot_list):
-    y_class_list = []
-    n = len(y_hot_list)
-    for i in range(n):
-        out = np.argmax(y_hot_list[i])
-        y_class_list.append(out)
-    return y_class_list
 
 
 def numericalSort(value):
@@ -58,26 +30,6 @@ def numericalSort(value):
     parts = numbers.split(value)
     parts[1::2] = map(int, parts[1::2])
     return parts
-
-
-def crop(img, crop_size=256, stride=None):
-    if stride is None:
-        stride = crop_size/2
-    croped_images = []
-    h, w, c = img.shape
-
-    n_h = math.ceil((h-crop_size)/stride+1)
-    n_w = math.ceil((w-crop_size)/stride+1)
-
-    for i in range(n_h):
-        h1 = min(int(i*stride), h-crop_size)
-        h2 = min(int(i*stride+crop_size), h)
-        for j in range(n_w):
-            w1 = min(int(j*stride), w-crop_size)
-            w2 = min(int(j*stride+crop_size), w)
-            crop_x = img[h1:h2, w1:w2, :]
-            croped_images.append(crop_x)
-    return croped_images
 
 
 def conf_matrix(val_dataset, predictions, plot=True):
