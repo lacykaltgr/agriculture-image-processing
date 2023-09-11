@@ -4,29 +4,9 @@ import torch.nn.functional as F
 import torch
 import numpy as np
 
-from src.utils import onehot_to_rgb,  color_dict
-
-
-class EarlyStopper:
-    def __init__(self, patience=1, min_delta=0):
-        self.patience = patience
-        self.min_delta = min_delta
-        self.counter = 0
-        self.min_validation_loss = np.inf
-
-    def early_stop(self, validation_loss):
-        if validation_loss < self.min_validation_loss:
-            self.min_validation_loss = validation_loss
-            self.counter = 0
-        elif validation_loss > (self.min_validation_loss + self.min_delta):
-            self.counter += 1
-            if self.counter >= self.patience:
-                return True
-        return False
-
 
 class UNet(nn.Module):
-    def __init__(self, in_channels=4, out_channels=9):
+    def __init__(self, in_channels=3, out_channels=9):
         super(UNet, self).__init__()
 
         # Left side of the U-Net
@@ -219,9 +199,10 @@ class UNet(nn.Module):
 
             valid_accuracy = 100 * correct_valid / total_valid
 
-            train_loss.append(epoch_train_loss/len(train_loader))
-            valid_loss.append(epoch_valid_loss/len(valid_loader))
-            print(f'Epoch {epoch+1:03}: | Train Loss: {epoch_train_loss/len(train_loader):.5f} | Validation Loss: {epoch_valid_loss/len(valid_loader):.5f} | Train Acc: {train_accuracy:.2f}% | Valid Acc: {valid_accuracy:.2f}%')
+            train_loss.append(epoch_train_loss / len(train_loader))
+            valid_loss.append(epoch_valid_loss / len(valid_loader))
+            print(
+                f'Epoch {epoch + 1:03}: | Train Loss: {epoch_train_loss / len(train_loader):.5f} | Validation Loss: {epoch_valid_loss / len(valid_loader):.5f} | Train Acc: {train_accuracy:.2f}% | Valid Acc: {valid_accuracy:.2f}%')
 
             if early_stopper.early_stop(epoch_valid_loss):
                 break
@@ -270,4 +251,3 @@ class UNet(nn.Module):
         total = np.prod(acc_targets.size())
         correct = (acc_predictions == acc_targets).sum().item()
         return correct, total
-
