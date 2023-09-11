@@ -9,7 +9,7 @@ class UNet(nn.Module):
     def __init__(self, in_channels=3, out_channels=9,
                  hiddens=None, dropouts=None, kernel_sizes=None, maxpools=None, paddings=None, strides=None,
                  criterion=nn.CrossEntropyLoss, activation=nn.ReLU, output_activation=nn.Softmax,
-                 post_process=None, dimensions=2, device='cuda'):
+                 pre_process=None, post_process=None, dimensions=2, device='cuda'):
         super(UNet, self).__init__()
 
         if dimensions == 2:
@@ -28,6 +28,7 @@ class UNet(nn.Module):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.criterion = criterion()
+        self.pre_process = pre_process if pre_process is not None else lambda x: x
         self.post_process = post_process if post_process is not None else lambda x: x
         self.device = device
 
@@ -268,7 +269,7 @@ class UNet(nn.Module):
         with torch.no_grad():
             for batch in test_loader:
                 inputs, _ = batch
-                inputs = inputs.to(device)
+                inputs = self.pre_process(inputs).to(device)
                 outputs = self(inputs)
                 _, preds = torch.max(outputs, 1)
                 raw_predictions.append(preds.detach().cpu().numpy())
