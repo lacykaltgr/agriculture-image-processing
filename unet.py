@@ -147,7 +147,7 @@ class UNet(nn.Module):
             self.layers_downsample[f"dropout_{i}"] = \
                 dropout(p=dropouts[i])
 
-            if i != self.n_upsamples - 1:  # utsonak nem kell
+            if i != self.n_downsamples - 1:  # utsonak nem kell
                 self.layers_downsample[f"maxpool_{i}"] = maxpool(maxpools[i])
 
         # Up-sampling starts, right side of the U-Net
@@ -164,10 +164,10 @@ class UNet(nn.Module):
             self.layers_upsample[f"conv_dec_{i}_2"] = \
                 conv(channels_upsample[i + 1], channels_upsample[i + 1],
                      kernel_size=dec_kernel_sizes[3 * i + 2], padding=dec_paddings[3 * i + 2],
-                     stride=dec_kernel_sizes[3 * i + 2])
+                     stride=dec_strides[3 * i + 2])
 
             if i == self.n_upsamples - 2:
-                self.layers[f"conv_dec_{i}_3"] = \
+                self.layers_upsample[f"conv_dec_{i}_3"] = \
                     conv(channels_upsample[i + 1], channels_upsample[i + 2],
                          kernel_size=dec_kernel_sizes[3 * i + 3], padding=dec_paddings[3 * i + 3],
                          stride=dec_strides[3 * i + 3])
@@ -199,11 +199,12 @@ class UNet(nn.Module):
             x = self.activation(self.layers_downsample[f"conv_enc_{i}_1"](x))
             x = self.activation(self.layers_downsample[f"conv_enc_{i}_2"](x))
             x = self.layers_downsample[f"batchnorm_enc_{i}"](x)
-            x = self.layers_downsample[f"dropout_enc_{i}"](x)
+            x = self.layers_downsample[f"dropout_{i}"](x)
 
             if i != self.n_downsamples - 1:
                 skip_connections.append(x)
                 x = self.layers_downsample[f"maxpool_{i}"](x)
+
         # Upsampling Starts, right side of the U-Net
         for i in range(self.n_upsamples):
             skip = skip_connections.pop()
@@ -214,8 +215,9 @@ class UNet(nn.Module):
             x = self.activation(self.layers_upsample[f"conv_dec_{i}_2"](x))
             x = self.layers_upsample[f"batchnorm_dec_{i}"](x)
 
-            if i != self.n_upsamples - 1:
-                x = self.activation(self.layers_upsample[f"conv_dec_{i}"](x))
+            if i == self.n_upsamples - 1:
+                x = self.activation(self.layers_upsample[f"conv_dec_{i}_3"](x))
+            x = self.layers_upsample[f"batchnorm_dec_{i}"](x)
 
         # Output layer of the U-Net with a softmax activation
         out_conv = self.layers_upsample["out_conv"](x)
