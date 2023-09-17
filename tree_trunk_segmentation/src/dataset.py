@@ -4,7 +4,9 @@ import re
 from torch.utils.data import Dataset
 import torch
 import glob
+import random
 from tree_trunk_segmentation.src.utils import rgb_to_binary, color_dict, numericalSort
+from tree_trunk_segmentation.src.augment import augment_dataset_with_labels
 
 
 class XYDataset(Dataset):
@@ -81,6 +83,7 @@ def load_dataset(root, target_size_x=None, target_size_y=None, val_split_ratio=0
     split = int(len(x_data) * val_split_ratio)
     x_train = x_data[:split]
     y_train = y_data[:split]
+    x_train, y_train = augment_dataset_with_labels(x_train, y_train)
     x_val = x_data[split:]
     y_val = y_data[split:]
 
