@@ -119,7 +119,7 @@ def augment_dataset_with_labels(x, y):
         # Apply horizontal flip to x and maintain labels
         augmented_x.append(cv2.flip(image_x, 1).copy())
         # Apply horizontal flip to y and maintain labels
-        augmented_y.append(cv2.flip(image_y, 1)[:, np.newaxis].copy())
+        augmented_y.append(cv2.flip(image_y, 1)[:,:, np.newaxis].copy())
 
 
         # Apply color augmentation to x (darker version)
