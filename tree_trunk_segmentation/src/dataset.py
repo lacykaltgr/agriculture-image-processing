@@ -27,7 +27,7 @@ def load_dataset(root, target_size_x=None, target_size_y=None, val_split_ratio=0
     binary = lambda y: rgb_to_binary(y, color_dict)
 
     x_filelist_3_2 = sorted(glob.glob(os.path.join(root, '3_2_images', '*.JPG')), key=numericalSort)
-    x_filelist_4_3 = sorted(glob.glob(os.path.join(root, '4_3_images', '*.jpg')), key=numericalSort)
+    x_filelist_4_3 = sorted(glob.glob(os.path.join(root, '4_3_images', '*.JPG')), key=numericalSort)
 
     x_data, y_data = [], []
 
