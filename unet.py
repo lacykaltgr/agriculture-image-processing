@@ -309,8 +309,6 @@ class UNet(nn.Module):
 
     @staticmethod
     def _accuracy_score(y_true, y_pred):
-        print(y_true.shape, y_pred.shape)
-        print(y_pred.round() == y_true)
         if y_true.shape[1] == 1:
             total = np.prod(y_true.size())
             correct = torch.sum(y_pred.round() == y_true).item()
