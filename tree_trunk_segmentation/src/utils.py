@@ -4,17 +4,16 @@ import math
 import matplotlib.pyplot as plt
 
 color_dict = {
-    0: torch.tensor([255, 0, 0]),      # Red (Not Trees)
-    1: torch.tensor([0, 255, 0])       # Green (Tree Trunks)
+    0: np.array([255, 0, 0]),      # Red (Not Trees)
+    1: np.array([0, 255, 0])       # Green (Tree Trunks)
 }
 
 
 def rgb_to_binary(rgb_arr: np.array, color_dict):
-    shape = (1,)+rgb_arr.shape[1:]
-    color_match = np.all(rgb_arr == color_dict[1], dim=2)
-    arr = np.zeros(shape, dtype=np.uint8)
-    arr[0, :, :] = np.uint8(color_match)
-    return arr
+    shape = rgb_arr.shape[:2] + (1, )
+    color_match = np.all(rgb_arr == color_dict[1], axis=2)
+    color_match = np.uint8(color_match.reshape(shape))
+    return color_match
 
 
 def binary_to_rgb(onehot):
