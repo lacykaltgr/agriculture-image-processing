@@ -63,7 +63,7 @@ def load_dataset(root, target_size_x=None, target_size_y=None, val_split_ratio=0
     for x_file in x_filelist_4_3:
         x_filename = os.path.basename(x_file)
         x_serial_number = re.search(r'\d+', x_filename).group()
-        y_file = os.path.join(root, f'DSC{x_serial_number}_train.png')
+        y_file = os.path.join(root, f'P{x_serial_number}_train.png')
         if not os.path.exists(y_file):
             raise ValueError("Target file does not exist")
 
