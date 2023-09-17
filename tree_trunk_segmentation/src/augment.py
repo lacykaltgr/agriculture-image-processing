@@ -111,26 +111,27 @@ def augment_dataset_with_labels(x, y):
         image_x = x[i]
         image_y = y[i]
 
+        # Append x
+        augmented_x.append(image_x.copy())
         # Append y
         augmented_y.append(image_y.copy())
 
+        # Apply horizontal flip to x and maintain labels
+        augmented_x.append(cv2.flip(image_x, 1).copy())
         # Apply horizontal flip to y and maintain labels
         augmented_y.append(cv2.flip(image_y, 1).copy())
 
-        # Append x
-        augmented_x.append(image_x.copy())
 
         # Apply color augmentation to x (darker version)
         hsv_image_x = cv2.cvtColor(image_x, cv2.COLOR_BGR2HSV)
         darkened_hsv_image_x = hsv_image_x.copy()
         darkened_hsv_image_x[..., 2] = np.clip(darkened_hsv_image_x[..., 2] * 0.8, 0, 255)
         augmented_x.append(cv2.cvtColor(darkened_hsv_image_x, cv2.COLOR_HSV2BGR))
+        augmented_y.append(image_y.copy())
 
         # Apply contrast augmentation to x (increase)
         augmented_x.append(cv2.convertScaleAbs(image_x, alpha=1.2, beta=0))
-
-        # Apply horizontal flip to x and maintain labels
-        augmented_x.append(cv2.flip(image_x, 1).copy())
+        augmented_y.append(image_y.copy())
 
     return augmented_x, augmented_y
 
