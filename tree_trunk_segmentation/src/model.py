@@ -20,6 +20,7 @@ class TreeTrunkModel(UNet):
                 inputs, targets = inputs.to(device).float(), targets.to(device).float()
                 outputs = self(inputs)
                 outputs = outputs[:, :, 1250:1750, :]
+                targets = targets[:, :, 1250:1750, :]
                 loss = self.criterion(outputs, targets)
                 loss.backward()
                 optimizer.step()
