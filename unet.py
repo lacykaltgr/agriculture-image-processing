@@ -8,7 +8,7 @@ import numpy as np
 class UNet(nn.Module):
     def __init__(self, in_channels=3, out_channels=9,
                  hiddens=None, dropouts=None, kernel_sizes=None, maxpools=None, paddings=None, strides=None,
-                 criterion=nn.CrossEntropyLoss, activation=nn.ReLU, output_activation=nn.Softmax,
+                 criterion=nn.CrossEntropyLoss, activation=nn.ReLU(), output_activation=nn.Softmax(dim=1),
                  pre_process=None, post_process=None, dimensions=2, device='cuda'):
         super(UNet, self).__init__()
 
@@ -179,8 +179,8 @@ class UNet(nn.Module):
         self.layers_upsample["conv_out"] = \
             conv(channels_upsample[-2], channels_upsample[-1],
                  kernel_size=dec_kernel_sizes[-1], padding=dec_paddings[-1], stride=dec_strides[-1])
-        self.output_activation = output_activation(dim=1)
-        self.activation = activation()
+        self.output_activation = output_activation
+        self.activation = activation
 
         # initialize all parameters with xavier uniform
         for m in self.modules():
