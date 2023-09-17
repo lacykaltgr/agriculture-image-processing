@@ -22,6 +22,30 @@ def binary_to_rgb(onehot):
     return np.uint8(output)
 
 
+def plot_results(image, target, prediction):
+    from matplotlib.pyplot import imshow, show
+    import numpy as np
+
+    pred = np.transpose(prediction[0], (2, 1, 0))
+
+    imshow(image)
+    show()
+
+    imshow(pred)
+    show()
+
+    imshow(target)
+    show()
+
+    image[1250:1750, :, :] = pred*255
+    imshow(image)
+    show()
+
+    image[1250:1750, :, :] = target*255
+    imshow(image)
+    show()
+
+
 def numericalSort(value):
     import re
     numbers = re.compile(r'(\d+)')
