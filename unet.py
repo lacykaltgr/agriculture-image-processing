@@ -44,7 +44,7 @@ class UNet(nn.Module):
         channels_downsample = [in_channels] + hiddens
         self.n_downsamples = len(channels_downsample) - 1
         channels_upsample = hiddens[::-1] + [out_channels]
-        self.n_upsamples = len(channels_upsample) - 1
+        self.n_upsamples = len(channels_upsample) - 2
 
         # dropouts
         if dropouts is None:
@@ -166,14 +166,14 @@ class UNet(nn.Module):
                      kernel_size=dec_kernel_sizes[3 * i + 2], padding=dec_paddings[3 * i + 2],
                      stride=dec_strides[3 * i + 2])
 
-            if i == self.n_upsamples - 2:
+            if i == self.n_upsamples - 1:
                 self.layers_upsample[f"conv_dec_{i}_3"] = \
-                    conv(channels_upsample[i + 1], channels_upsample[i + 2],
+                    conv(channels_upsample[i + 1], channels_upsample[i + 1],
                          kernel_size=dec_kernel_sizes[3 * i + 3], padding=dec_paddings[3 * i + 3],
                          stride=dec_strides[3 * i + 3])
-                self.layers_upsample[f"batchnorm_dec_{i}"] = batchnorm(channels_upsample[i + 2])
-            else:
-                self.layers_upsample[f"batchnorm_dec_{i}"] = batchnorm(channels_upsample[i + 1])
+            self.layers_upsample[f"batchnorm_dec_{i}"] = batchnorm(channels_upsample[i + 1])
+            #else:
+            #    self.layers_upsample[f"batchnorm_dec_{i}"] = batchnorm(channels_upsample[i + 1])
 
         # Output layer of the U-Net with a softmax activation
         self.layers_upsample["conv_out"] = \
@@ -213,14 +213,13 @@ class UNet(nn.Module):
             x = torch.cat([skip, x], dim=1)
             x = self.activation(self.layers_upsample[f"conv_dec_{i}_1"](x))
             x = self.activation(self.layers_upsample[f"conv_dec_{i}_2"](x))
-            x = self.layers_upsample[f"batchnorm_dec_{i}"](x)
 
             if i == self.n_upsamples - 1:
                 x = self.activation(self.layers_upsample[f"conv_dec_{i}_3"](x))
             x = self.layers_upsample[f"batchnorm_dec_{i}"](x)
 
         # Output layer of the U-Net with a softmax activation
-        out_conv = self.layers_upsample["out_conv"](x)
+        out_conv = self.layers_upsample["conv_out"](x)
         y = self.output_activation(out_conv)
         return y
 
