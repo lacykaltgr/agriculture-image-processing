@@ -8,7 +8,7 @@ import numpy as np
 class UNet(nn.Module):
     def __init__(self, in_channels=3, out_channels=9,
                  hiddens=None, dropouts=None, kernel_sizes=None, maxpools=None, paddings=None, strides=None,
-                 criterion=nn.CrossEntropyLoss, activation=nn.ReLU(), output_activation=nn.Softmax(dim=1),
+                 criterion=nn.CrossEntropyLoss(), activation=nn.ReLU(), output_activation=nn.Softmax(dim=1),
                  pre_process=None, post_process=None, dimensions=2, device='cuda'):
         super(UNet, self).__init__()
 
@@ -27,7 +27,7 @@ class UNet(nn.Module):
 
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.criterion = criterion()
+        self.criterion = criterion
         self.pre_process = pre_process if pre_process is not None else lambda x: x
         self.post_process = post_process if post_process is not None else lambda x: x
         self.device = device
@@ -309,9 +309,17 @@ class UNet(nn.Module):
 
     @staticmethod
     def _accuracy_score(y_true, y_pred):
-        _, acc_predictions = torch.max(y_pred, 1)
-        _, acc_targets = torch.max(y_true, 1)
-        total = np.prod(acc_targets.size())
-        correct = (acc_predictions == acc_targets).sum().item()
-        return correct, total
+        print(y_true.shape, y_pred.shape)
+        print(y_pred.round() == y_true)
+        if y_true.shape[1] == 1:
+            total = np.prod(y_true.size())
+            correct = torch.sum(y_pred.round() == y_true).item()
+            return correct, total
+        else:
+            _, acc_predictions = torch.max(y_pred, 1)
+            _, acc_targets = torch.max(y_true, 1)
+            total = np.prod(acc_targets.size())
+            correct = (acc_predictions == acc_targets).sum().item()
+            return correct, total
+
 
