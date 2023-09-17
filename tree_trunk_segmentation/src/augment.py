@@ -103,59 +103,6 @@ def load_and_augment_image(image_path):
     return augmented_images
 
 
-# Load and augment the image
-input_image_path = '/Users/czimbermark/DeepLearning_Projects_23/agriculture-image-processing/tree-trunk-segmentation/data/4_3_images/P1010147.JPG'  # Replace with the actual path
-augmented_images = load_and_augment_image(input_image_path)
-
-# List of custom names for augmented images
-custom_names = [
-    "Horizontal Flipping",
-    "Color Augmentation (Darkened)",
-    "Color Augmentation (Lightened)",
-    "Gamma Correction (Darkened)",
-    "Gamma Correction (Lightened)",
-    "Hue Shift (Left)",
-    "Hue Shift (Right)",
-    "Saturation Decrease",
-    "Saturation Increase",
-    "Contrast Decrease",
-    "Contrast Increase",
-    "Foggy Weather",
-    "Rainy Weather",
-    "Cloudy Weather",
-    "Elastic Transformation",
-    "Gaussian Blurred (3x3 Kernel)",
-    "Gaussian Blurred (5x5 Kernel)",
-    "Median Blurred (3x3 Kernel)"
-]
-'''
-
-# Plot the original and augmented images
-num_images = len(augmented_images)
-num_cols = 4  # Number of columns
-num_rows = (num_images + num_cols - 1) // num_cols  # Calculate the number of rows needed
-plt.figure(figsize=(15, 4 * num_rows))
-
-# Plot the original image
-plt.subplot(num_rows, num_cols, 1)
-original_image = cv2.imread(input_image_path)
-plt.imshow(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB))
-plt.title('Original Image')
-plt.axis('off')
-
-# Plot the augmented images
-for i, augmented_image in enumerate(augmented_images):
-    title = custom_names[i] if i < len(custom_names) else f'Augmented Image {i+1}'
-    plt.subplot(num_rows, num_cols, i+2)  # Start from the second subplot
-    plt.imshow(cv2.cvtColor(augmented_image, cv2.COLOR_BGR2RGB))
-    plt.title(title)
-    plt.axis('off')
-
-plt.tight_layout()
-plt.show()
-
-'''
-
 def augment_dataset_with_labels(x, y):
     augmented_x = []
     augmented_y = []
@@ -219,10 +166,3 @@ def plot_images(x, y):
 
     plt.tight_layout()
     plt.show()
-
-folder_path = '/Users/czimbermark/DeepLearning_Projects_23/agriculture-image-processing/tree-trunk-segmentation/data/3_2_images'
-x_images, y_images = load_images(folder_path)
-
-augmented_x, augmented_y = augment_dataset_with_labels(x_images, y_images)
-
-plot_images(augmented_y, augmented_x)

@@ -37,11 +37,11 @@ def plot_results(image, target, prediction):
     imshow(target)
     show()
 
-    image[1250:1750, :, :] = pred*255
+    image[1250:1750, :, :] = pred[1250:1270, :, :]*255
     imshow(image)
     show()
 
-    image[1250:1750, :, :] = target*255
+    image[1250:1750, :, :] = target[1250:1270, :, :]*255
     imshow(image)
     show()
 
