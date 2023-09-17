@@ -46,7 +46,7 @@ def load_dataset(root, target_size_x=None, target_size_y=None, val_split_ratio=0
         new_w_x = int(h_x / 3 * 4)
         x1 = x[:, :new_w_x]
         x2 = x[:, w_x-new_w_x:]
-        y = y[1574:2074, :, :3] # igy pont 500, alapból 512
+        y = y[:, :, :3] # igy pont 500, alapból 512
         y1 = y[:, :new_w_x]
         y2 = y[:, w_x-new_w_x:]
 
