@@ -130,7 +130,7 @@ def augment_dataset_with_labels(x, y):
         augmented_y.append(image_y.copy())
 
         # Apply contrast augmentation to x (increase)
-        augmented_x.append(cv2.convertScaleAbs(image_x, alpha=1.2, beta=0))
+        augmented_x.append(cv2.convertScaleAbs(image_x, alpha=1.5, beta=0))
         augmented_y.append(image_y.copy())
 
     return augmented_x, augmented_y
