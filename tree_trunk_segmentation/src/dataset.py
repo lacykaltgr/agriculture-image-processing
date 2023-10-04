@@ -1,6 +1,8 @@
 import cv2
 import os
 import re
+
+import numpy as np
 from torch.utils.data import Dataset
 import torch
 import glob
@@ -25,7 +27,7 @@ class XYDataset(Dataset):
 
 
 def load_dataset(root, target_size_x=None, target_size_y=None, val_split_ratio=0.9):
-
+    """
     binary = lambda y: rgb_to_binary(y, color_dict)
 
     x_filelist_3_2 = sorted(glob.glob(os.path.join(root, '3_2_images', '*.JPG')), key=numericalSort)
@@ -79,7 +81,9 @@ def load_dataset(root, target_size_x=None, target_size_y=None, val_split_ratio=0
 
         x_data.append(x)
         y_data.append(binary(y))
-
+    """
+    x_data = np.load(os.path.join(root, 'x.npy'))
+    y_data = np.float32(np.expand_dims(np.load(os.path.join(root, 'y.npy')), axis=-1))
     split = int(len(x_data) * val_split_ratio)
     x_train = x_data[:split]
     y_train = y_data[:split]
