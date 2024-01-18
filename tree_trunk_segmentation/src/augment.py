@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import imgaug.augmenters as iaa
 
 
-
 def load_and_augment_image(image_path):
     original_image = cv2.imread(image_path)
     augmented_images = []
