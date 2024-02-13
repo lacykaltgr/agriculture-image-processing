@@ -3,11 +3,12 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torch
 import numpy as np
+from tqdm import tqdm
 
 
 class UNet(nn.Module):
-    def __init__(self, in_channels=3, out_channels=9,
-                 hiddens=None, dropouts=None, kernel_sizes=None, maxpools=None, paddings=None, strides=None,
+    def __init__(self, in_channels=3, out_channels=9, hiddens=None,
+                 dropouts=None, kernel_sizes=None, maxpools=None, paddings=None, dilation=None, strides=None,
                  criterion=nn.CrossEntropyLoss(), activation=nn.ReLU(), output_activation=nn.Softmax(dim=1),
                  pre_process=None, post_process=None, dimensions=2, device='cuda'):
         super(UNet, self).__init__()
@@ -110,6 +111,24 @@ class UNet(nn.Module):
             raise ValueError("Paddings must be an integer, a tuple of integers or a list of integers")
         enc_paddings, dec_paddings = paddings
 
+        if dilation is None:
+            dilation = [[1] * n_enc_convolutions, [1] * n_dec_convolutions]
+        elif isinstance(dilation, int):
+            dilation = [[dilation] * n_enc_convolutions, [dilation] * n_dec_convolutions]
+        elif isinstance(dilation, tuple):
+            dilation = [[dilation] * n_enc_convolutions, [dilation] * n_dec_convolutions]
+        elif isinstance(dilation, list):
+            assert len(dilation) == 2, \
+                "Number of kernel_sizes must be organized into encoder, decoder kernel sizes"
+            assert len(dilation[0]) == n_enc_convolutions, \
+                "Number of encoder kernel_sizes must match the number of encoder convolutions"
+            assert len(dilation[1]) == n_dec_convolutions, \
+                "Number of decoder kernel_sizes must match the number of decoder convolutions"
+        else:
+            raise ValueError("Kernel_sizes must be an integer, a tuple of integers or a list of integers")
+
+        enc_dilations, dec_dilations = dilation
+
         if strides is None:
             strides = [[1] * n_enc_convolutions, [1] * n_dec_convolutions]
         elif isinstance(strides, int):
@@ -133,11 +152,11 @@ class UNet(nn.Module):
         # Left side of the U-Net
         for i in range(self.n_downsamples):
             self.layers_downsample[f"conv_enc_{i}_1"] = \
-                conv(channels_downsample[i], channels_downsample[i + 1],
+                conv(channels_downsample[i], channels_downsample[i + 1], dilation=enc_dilations[2 * i],
                      kernel_size=enc_kernel_sizes[2 * i], padding=enc_paddings[2 * i], stride=enc_strides[2 * i])
 
             self.layers_downsample[f"conv_enc_{i}_2"] = \
-                conv(channels_downsample[i + 1], channels_downsample[i + 1],
+                conv(channels_downsample[i + 1], channels_downsample[i + 1], dilation=enc_dilations[2 * i + 1],
                      kernel_size=enc_kernel_sizes[2 * i + 1], padding=enc_paddings[2 * i + 1],
                      stride=enc_strides[2 * i + 1])
 
@@ -153,16 +172,16 @@ class UNet(nn.Module):
         # Up-sampling starts, right side of the U-Net
         for i in range(self.n_upsamples):
             self.layers_upsample[f"upconv_dec_{i}"] = \
-                conv(channels_upsample[i], channels_upsample[i + 1],
+                conv(channels_upsample[i], channels_upsample[i + 1], dilation=dec_dilations[3 * i],
                      kernel_size=dec_kernel_sizes[3 * i], padding=dec_paddings[3 * i], stride=dec_strides[3 * i])
 
             self.layers_upsample[f"conv_dec_{i}_1"] = \
-                conv(channels_upsample[i], channels_upsample[i + 1],
+                conv(channels_upsample[i], channels_upsample[i + 1], dilation=dec_dilations[3 * i + 1],
                      kernel_size=dec_kernel_sizes[3 * i + 1], padding=dec_paddings[3 * i + 1],
                      stride=dec_strides[3 * i + 1])
 
             self.layers_upsample[f"conv_dec_{i}_2"] = \
-                conv(channels_upsample[i + 1], channels_upsample[i + 1],
+                conv(channels_upsample[i + 1], channels_upsample[i + 1], dilation=dec_dilations[3 * i + 2],
                      kernel_size=dec_kernel_sizes[3 * i + 2], padding=dec_paddings[3 * i + 2],
                      stride=dec_strides[3 * i + 2])
 
@@ -170,14 +189,14 @@ class UNet(nn.Module):
                 self.layers_upsample[f"conv_dec_{i}_3"] = \
                     conv(channels_upsample[i + 1], channels_upsample[i + 1],
                          kernel_size=dec_kernel_sizes[3 * i + 3], padding=dec_paddings[3 * i + 3],
-                         stride=dec_strides[3 * i + 3])
+                         stride=dec_strides[3 * i + 3], dilation=dec_dilations[3 * i + 3])
             self.layers_upsample[f"batchnorm_dec_{i}"] = batchnorm(channels_upsample[i + 1])
             #else:
             #    self.layers_upsample[f"batchnorm_dec_{i}"] = batchnorm(channels_upsample[i + 1])
 
         # Output layer of the U-Net with a softmax activation
         self.layers_upsample["conv_out"] = \
-            conv(channels_upsample[-2], channels_upsample[-1],
+            conv(channels_upsample[-2], channels_upsample[-1], dilation=dec_dilations[-1],
                  kernel_size=dec_kernel_sizes[-1], padding=dec_paddings[-1], stride=dec_strides[-1])
         self.output_activation = output_activation
         self.activation = activation
@@ -231,7 +250,7 @@ class UNet(nn.Module):
         for epoch in range(num_epochs):
             epoch_train_loss = correct_train = total_train = 0
             self.train()
-            for batch in train_loader:
+            for batch in tqdm(train_loader):
                 optimizer.zero_grad()
                 inputs, targets = batch
                 inputs, targets = inputs.to(device).float(), targets.to(device).float()
@@ -239,14 +258,13 @@ class UNet(nn.Module):
                 loss = self.criterion(outputs, targets)
                 loss.backward()
                 optimizer.step()
-                epoch_train_loss += loss.item()
+                loss = loss.item()
+                print("Loss: ", loss)
+                epoch_train_loss += loss
 
                 c, t = self._accuracy_score(targets, outputs)
                 correct_train += c
                 total_train += t
-
-                outputs.detach().cpu()
-                targets.detach().cpu()
 
             train_accuracy = 100 * correct_train / total_train
 

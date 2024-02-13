@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='segment_torch',         # How you named your package folder (MyLib)
     packages=['segment_torch'],
-    version='0.0.1',      # Start with a small number and increase it with every change you make
+    version='0.0.10',      # Start with a small number and increase it with every change you make
     license='MIT',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
     description="Universal implementation of the UNet architecture for image segmentation.",   # Give a short description about your library
     long_description=open('README.md').read(),
